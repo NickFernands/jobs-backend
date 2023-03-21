@@ -5,12 +5,14 @@ import com.simplesdental.jobsbackend.models.Contato;
 import com.simplesdental.jobsbackend.models.Profissional;
 import com.simplesdental.jobsbackend.repositories.ContatoRepository;
 import com.simplesdental.jobsbackend.repositories.ProfissionalRepository;
+import com.simplesdental.jobsbackend.responses.FindContatoByParameterResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,21 +25,48 @@ public class ContatoService {
     @Autowired
     ProfissionalRepository profissionalRepository;
 
-    public ResponseEntity<List<Contato>> getContatoByParam(String param, String fields) {
+    public List<FindContatoByParameterResponse> getContatoByParam(String param, List<String> fields) {
 
         try {
 
-            List<Contato> contacts = this.contatoRepository.findByParameterAndFields(param, fields);
+            List<Contato> contatos = this.contatoRepository.findByParameterAndFields(param);
+            List<FindContatoByParameterResponse> contatoResponse = new ArrayList<FindContatoByParameterResponse>();
 
-            if(contacts.isEmpty()) {
-                return ResponseEntity.notFound().build();
+            for(Contato contato : contatos) {
+                FindContatoByParameterResponse contatoElement = new FindContatoByParameterResponse();
+                contatoElement.setIdContato(contato.getIdContato());
+                contatoElement.setNome(contato.getNome());
+                contatoElement.setContato(contato.getContato());
+                contatoElement.setProfissional(contato.getProfissional());
+
+                contatoResponse.add(contatoElement);
             }
 
-            return ResponseEntity.ok(contacts);
+
+            this.contatoFilter(contatoResponse, fields);
+
+            return contatoResponse;
 
         } catch (Error error) {
 
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void contatoFilter(List<FindContatoByParameterResponse> contatoResponse, List<String> fields) {
+        for(FindContatoByParameterResponse contato: contatoResponse) {
+            if (!fields.contains("idContato")) {
+                contato.setIdContato(null);
+            }
+            if (!fields.contains("nome")) {
+                contato.setNome(null);
+            }
+            if (!fields.contains("contato")) {
+                contato.setContato(null);
+            }
+            if (!fields.contains("profissional")) {
+                contato.setProfissional(null);
+            }
         }
     }
 
@@ -120,14 +149,14 @@ public class ContatoService {
         }
     }
 
-    public String deleteContato(Long id) {
+    public ResponseEntity<?> deleteContato(Long id) {
 
         if (!contatoRepository.existsById(id)) {
-            return ResponseEntity.notFound().build().toString();
+            return ResponseEntity.notFound().build();
         }
 
         contatoRepository.deleteById(id);
 
-        return ResponseEntity.noContent().build().toString();
+        return ResponseEntity.noContent().build();
     }
 }

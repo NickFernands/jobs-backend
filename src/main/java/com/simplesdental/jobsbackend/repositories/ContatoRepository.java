@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface ContatoRepository extends JpaRepository<Contato,Long> {
 
-    @Query(value = "SELECT :fields FROM Contato WHERE idContato LIKE :parameter OR nome LIKE :parameter OR contato LIKE :parameter OR idProfissional LIKE :parameter", nativeQuery = true)
-    List<Contato> findByParameterAndFields(@Param("parameter")String parameter, @Param("fields") String fields);
+    @Query("select a from Contato a where nome = ?1 or contato = ?1")
+    List<Contato> findByParameterAndFields(@Param("parameter")String parameter);
 
 }
